@@ -14,7 +14,8 @@ def publish_user_registered_event(user):
             "user_type": user.user_type
         }
 
-        producer.send("user-registered", event)
+        # Enviamos al topic correcto
+        producer.send("user_registered", event)
         producer.flush()
 
     except Exception:
