@@ -3,26 +3,21 @@ version: "3.9"
 services:
 
   # =========================
-  # POSTGRESQL
+  # POSTGRES (SOLO LOCAL)
   # =========================
   postgres:
     image: postgres:15-alpine
     container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: users_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   # =========================
   # ZOOKEEPER
@@ -34,11 +29,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    logging:
-      driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "2"
 
   # =========================
   # KAFKA
@@ -57,16 +47,12 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   # =========================
   # USER REGISTRATION SERVICE
   # =========================
   user-registration-service:
+    image: dayanaheredia/user-registration-service:latest  # ✅ DOCKER HUB
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -83,14 +69,6 @@ services:
       uvicorn app.main:app
       --host 0.0.0.0
       --port 8081
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
-# =========================
-# VOLUMES
-# =========================
 volumes:
   postgres_data:
