@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
+# Cargar variables de entorno (.env)
 load_dotenv()
 
 POSTGRES_DB = os.getenv("POSTGRES_DB")
@@ -16,6 +17,18 @@ DATABASE_URL = (
     f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 )
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+# Engine de SQLAlchemy
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
+)
+
+# Sesiones de BD
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+# Base para los modelos
 Base = declarative_base()
