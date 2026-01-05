@@ -1,11 +1,10 @@
 import httpx
 from app.config import settings
 
-async def register(data: dict):
+async def login(data: dict):
     async with httpx.AsyncClient() as client:
         res = await client.post(
-            f"{settings.USER_SERVICE_URL}/users/register",
+            f"{settings.AUTH_SERVICE_URL}/auth/login",
             json=data
         )
         return res.json()
-
