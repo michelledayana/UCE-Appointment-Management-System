@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from app.services.user_service_client import register_user
+from fastapi import APIRouter
+from app.services.user_client import register
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
 @router.post("/register")
-def register(payload: dict):
-    response = register_user(payload)
-    return response
+async def register_user(data: dict):
+    return await register(data)
