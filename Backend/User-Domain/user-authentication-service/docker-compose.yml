@@ -1,23 +1,60 @@
 services:
-  authentication-service:
+  # Base de Datos para Autenticación
+  db-auth:
+    image: postgres:15-alpine
+    container_name: db_auth
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - microservices-net
+
+  # Kafka (Necesario para el consumidor)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - microservices-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-net
+
+  # TU MICROSERVICIO
+  user-authentication-service:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: dayanaheredia/user-authentication-service:latest
-    container_name: authentication_service
-    restart: unless-stopped
-    env_file:
-      - .env
+    container_name: user_authentication_service
+    depends_on:
+      - db-auth
+      - kafka
+    # COMENTA O BORRA ESTA LÍNEA SI NO TIENES EL .ENV AQUÍ
+    # env_file:
+    #   - .env 
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db-auth:5432/auth_db
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - JWT_SECRET_KEY=supersecretkey_aws_2026
+      - JWT_ALGORITHM=HS256
     ports:
-      - "8082:8082"
+      - "8082:8082" 
     networks:
       - microservices-net
-    command: >
-      uvicorn app.main:app
-      --host 0.0.0.0
-      --port 8082
 
 networks:
   microservices-net:
-    external: true
-    name: microservices-net
+    driver: bridge
