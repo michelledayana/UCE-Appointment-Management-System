@@ -1,43 +1,23 @@
 import json
-import os
-import time
 from kafka import KafkaProducer
-from kafka.errors import NoBrokersAvailable
-from app.core.logger import logger
+import logging
 
-# Variable global para reutilizar el productor
-_producer = None
+logger = logging.getLogger("user-registration")
 
-def get_kafka_producer():
-    """Crea el productor una sola vez (Singleton) con reintentos de conexión."""
-    global _producer
-    if _producer is None:
-        bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-        while True:
-            try:
-                _producer = KafkaProducer(
-                    bootstrap_servers=bootstrap_servers,
-                    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-                    retries=5,
-                    acks='all'
-                )
-                logger.info("--- [LOG] Productor de Kafka conectado exitosamente ---")
-                break
-            except NoBrokersAvailable:
-                logger.warning("--- [LOG] Kafka no disponible aún. Reintentando en 5s... ---")
-                time.sleep(5)
-    return _producer
+# Initialize producer (adjust bootstrap_servers if needed)
+try:
+    producer = KafkaProducer(
+        bootstrap_servers=['kafka:9092'],
+        value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    )
+except Exception as e:
+    logger.error(f"Failed to initialize Kafka Producer: {e}")
 
-def publish_user_registered_event(user_data: dict):
-    """Publica el evento usando el productor global."""
+def publish_user_registered_event(data):
     try:
-        producer = get_kafka_producer()
-        topic = "user_registered_topic"
-        
-        # Enviamos los datos
-        producer.send(topic, user_data)
+        producer.send('user_registered_topic', value=data)
         producer.flush()
-        
-        logger.info(f"Evento publicado en '{topic}' para: {user_data.get('email')}")
+        logger.info(f"Event published for user: {data['email']}")
     except Exception as e:
-        logger.error(f"Error al publicar en Kafka: {str(e)}")
+        logger.error(f"Error publishing to Kafka: {str(e)}")
+        # We don't raise the error so the HTTP response can still succeed
