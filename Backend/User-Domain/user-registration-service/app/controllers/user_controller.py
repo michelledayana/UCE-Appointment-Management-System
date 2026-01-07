@@ -5,23 +5,42 @@ from app.schemas.user_schema import UserRegisterRequest
 from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
 from app.database.dependencies import get_db
+# IMPORTANTE: Importa tu función de Kafka
+from app.utils.kafka_producer import publish_user_registered_event 
 
 router = APIRouter()
 
-# 🔹 Register new user
-@router.post("/register", status_code=201)
+# 🔹 Registro de nuevo usuario
+# Cambiamos la ruta a "/usuario". Como en el main.py pusiste prefix="/register", 
+# el link final será: http://localhost:8081/register/usuario
+@router.post("/usuario", status_code=201)
 def register_user(
     request: UserRegisterRequest,
     db: Session = Depends(get_db)
 ):
-    return UserService.register_user(
+    # 1. Registramos en la base de datos local (db_registration)
+    new_user = UserService.register_user(
         db=db,
         full_name=request.full_name,
         email=request.email,
         password=request.password
     )
 
-# 🔹 Get user by email (internal / for other services)
+    # 2. Preparamos los datos para enviar a Kafka (Microservicio de Autenticación)
+    # Enviamos el hash para que el microservicio de Auth pueda validar el login después
+    kafka_data = {
+        "email": new_user.email,
+        "password": new_user.password_hash, # Enviamos el hash, no la clave plana
+        "full_name": new_user.full_name,
+        "action": "CREATE_USER"
+    }
+
+    # 3. PUBLICAR EN KAFKA
+    publish_user_registered_event(kafka_data)
+
+    return new_user
+
+# 🔹 Obtener usuario por email
 @router.get("/by-email/{email}")
 def get_user_by_email(
     email: str,
