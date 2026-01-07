@@ -10,4 +10,4 @@ class UserRepository:
     def save(db, user: User):
         db.add(user)
         db.commit()
-        db.refresh(user)
+       
