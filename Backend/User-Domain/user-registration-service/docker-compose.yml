@@ -1,42 +1,32 @@
-version: "3.9"
+version: "3.8"
 
 services:
-
-  # =========================
-  # POSTGRES (SOLO LOCAL)
-  # =========================
-  postgres:
+  # Base de Datos Ligera (Alpine)
+  db-registration:
     image: postgres:15-alpine
-    container_name: postgres
+    container_name: db_registration
     restart: unless-stopped
     environment:
       POSTGRES_DB: users_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5433:5432"
+    networks:
+      - microservices-net
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - registration_data:/var/lib/postgresql/data
 
-  # =========================
-  # ZOOKEEPER
-  # =========================
+  # Infraestructura de Mensajería (Kafka Lite)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     container_name: zookeeper
-    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - microservices-net
 
-  # =========================
-  # KAFKA
-  # =========================
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
-    restart: unless-stopped
     depends_on:
       - zookeeper
     ports:
@@ -44,31 +34,38 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-net
 
-  # =========================
-  # USER REGISTRATION SERVICE
-  # =========================
+  # Microservicio de Registro (Optimizado)
   user-registration-service:
-    image: dayanaheredia/user-registration-service:latest  # ✅ DOCKER HUB
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: user_registration_service
-    restart: unless-stopped
+    image: dayanaheredia/user-registration-service:latest
     depends_on:
-      - postgres
+      - db-registration
       - kafka
     env_file:
       - .env
+    environment:
+      - POSTGRES_HOST=db-registration
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - PYTHONUNBUFFERED=1
     ports:
       - "8081:8081"
-    command: >
-      uvicorn app.main:app
-      --host 0.0.0.0
-      --port 8081
+    networks:
+      - microservices-net
 
+# Configuración de Red Única
+networks:
+  microservices-net:
+    name: microservices-net
+    driver: bridge
+
+# Persistencia de Datos
 volumes:
-  postgres_data:
+  registration_data:
