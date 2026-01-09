@@ -1,5 +1,5 @@
 from app.core.security import hash_password
 
-password = "dayanaheredia1234"
+password = "Admi1234"
 print(hash_password(password))
 

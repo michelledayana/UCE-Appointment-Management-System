@@ -1,73 +1,17 @@
 services:
-  # Base de Datos para Autenticación
-  db-auth:
-    image: postgres:15-alpine
-    container_name: db_auth
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432" # Puerto externo 5434 para evitar conflictos con otros Postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - microservices-net
-
-  # Kafka Infrastructure
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - microservices-net
-
-  kafka:
-    image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - microservices-net
-
-  # Microservicio de Autenticación
   user-authentication-service:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: user_authentication_service
+    container_name: user-authentication-service
     restart: unless-stopped
-    depends_on:
-      db-auth:
-        condition: service_healthy # Espera a que la DB pase el healthcheck
-      kafka:
-        condition: service_started
-    environment:
-      # El host es 'db-auth' para coincidir con el nombre del servicio arriba
-      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db-auth:5432/auth_db
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - JWT_SECRET_KEY=supersecretkey_aws_2026
-      - JWT_ALGORITHM=HS256
-      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
     ports:
-      - "8082:8082" 
+      - "8082:8082"
     networks:
-      - microservices-net
+      - user-network
 
 networks:
-  microservices-net:
-    name: microservices-net
-    driver: bridge
+  user-network:
+    external: true

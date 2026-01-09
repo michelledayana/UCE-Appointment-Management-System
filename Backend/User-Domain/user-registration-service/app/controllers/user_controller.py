@@ -29,7 +29,7 @@ def register_user(
                 "id": result["id"],
                 "email": result["email"],
                 "full_name": result["full_name"],
-                "role": result["role"]
+                "user_type": result["user_type"]  # 👈 IMPORTANTE
             }
         }
     )
