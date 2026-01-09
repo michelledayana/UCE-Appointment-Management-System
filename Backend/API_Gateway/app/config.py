@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     AUTH_SERVICE_URL: str = "http://localhost:8082"
     USER_SERVICE_URL: str = "http://localhost:8081"
     APPOINTMENT_SERVICE_URL: str = "http://localhost:8083"
+    CATALOG_SERVICE_URL: str = "http://localhost:8084"
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
