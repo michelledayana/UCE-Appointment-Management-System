@@ -2,9 +2,9 @@ from uuid import uuid4, UUID
 from datetime import date
 from fastapi import HTTPException, status
 
-from app.db.database import db
-from app.models.appointment import Appointment
-from app.schemas.appointment import AppointmentCreate
+from db.database import db
+from models.appointment import Appointment
+from schemas.appointment import AppointmentCreate
 
 
 class AppointmentService:

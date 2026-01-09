@@ -1,5 +1,5 @@
 from typing import List
-from app.models.appointment import Appointment
+from models.appointment import Appointment
 
 
 class InMemoryDatabase:
