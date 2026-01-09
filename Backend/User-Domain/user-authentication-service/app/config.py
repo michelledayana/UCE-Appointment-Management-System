@@ -1,14 +1,20 @@
-import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    # Lee la variable de entorno que pusimos en el docker-compose o .env
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@db-auth:5432/auth_db")
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "supersecretkey")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
+    database_url: str
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60
+    kafka_bootstrap_servers: str
+
+    class Config:
+        env_file = ".env"
 
 settings = Settings()
 
-# Para que la importación 'from app.config import DATABASE_URL' funcione:
-DATABASE_URL = settings.DATABASE_URL
+# Compatibilidad con imports actuales
+DATABASE_URL = settings.database_url
+JWT_SECRET_KEY = settings.jwt_secret_key
+JWT_ALGORITHM = settings.jwt_algorithm
+JWT_EXPIRE_MINUTES = settings.jwt_expire_minutes
+KAFKA_BOOTSTRAP_SERVERS = settings.kafka_bootstrap_servers

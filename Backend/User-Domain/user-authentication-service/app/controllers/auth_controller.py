@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.schemas.auth_schema import LoginRequest, LoginResponse
 from app.services.auth_service import authenticate_user
 
+
 router = APIRouter()
 
 @router.post("/login", response_model=LoginResponse)
