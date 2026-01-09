@@ -26,8 +26,10 @@ def register_user(
             "status": "success",
             "message": "User registered successfully",
             "data": {
+                "id": result["id"],
                 "email": result["email"],
-                "full_name": result["full_name"]
+                "full_name": result["full_name"],
+                "role": result["role"]
             }
         }
     )

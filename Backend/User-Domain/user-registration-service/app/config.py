@@ -1,34 +1,14 @@
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
+class Settings(BaseSettings):
+    # App
+    app_name: str = "User Registration Service"
 
-# Cargar variables de entorno (.env)
-load_dotenv()
+    # Database
+    database_url: str
 
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+    # Kafka
+    kafka_bootstrap_servers: str | None = None
+    kafka_topic_name: str = "user_registered_topic"  # 👈 renombrado
 
-DATABASE_URL = (
-    f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-)
-
-# Engine de SQLAlchemy
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True
-)
-
-# Sesiones de BD
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
-# Base para los modelos
-Base = declarative_base()
+    class Config:
+        env_file = ".env"
+        extra = "ignore"

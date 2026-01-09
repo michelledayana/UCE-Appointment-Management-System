@@ -1,11 +1,11 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-pydantic
 email-validator
 kafka-python
 python-dotenv
 psycopg2-binary
 werkzeug==2.3.7
 passlib[bcrypt]
-
+pydantic>=2.0
+pydantic-settings>=2.0

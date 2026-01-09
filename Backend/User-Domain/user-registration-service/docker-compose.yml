@@ -1,95 +1,29 @@
-version: "3.9"
-
 services:
-  # 1️⃣ PostgreSQL - User Registration DB
-  postgres:
-    image: postgres:15-alpine
-    container_name: db_registration
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: users_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d users_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - microservices-net
-
-  # 2️⃣ Zookeeper
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - microservices-net
-
-  # 3️⃣ Kafka Broker
-  kafka:
-    image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - microservices-net
-
-  # 4️⃣ Kafka Init - Crea tópicos
-  kafka-init:
-    image: confluentinc/cp-kafka:7.6.0
-    container_name: kafka_init
-    depends_on:
-      kafka:
-        condition: service_healthy
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      kafka-topics \
-        --bootstrap-server kafka:9092 \
-        --create \
-        --if-not-exists \
-        --topic user_registered_topic \
-        --replication-factor 1 \
-        --partitions 1
-    networks:
-      - microservices-net
-
-  # 5️⃣ User Registration Service
   user-registration-service:
+    image: user-registration-service:latest
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: user_registration_service
-    depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
+    container_name: user-registration-service
     environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/users_db
+      SERVICE_NAME: user-registration-service
+      APP_PORT: 8081
+
+      POSTGRES_DB: users_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: db-registration
+      POSTGRES_PORT: 5432
+
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      PYTHONUNBUFFERED: "1"
+      KAFKA_TOPIC_NAME: user_registered_topic
+
     ports:
       - "8081:8081"
     networks:
-      - microservices-net
+      - user-network
 
 networks:
-  microservices-net:
-    name: microservices-net
-    driver: bridge
+  user-network:
+    external: true
+    name: user-network

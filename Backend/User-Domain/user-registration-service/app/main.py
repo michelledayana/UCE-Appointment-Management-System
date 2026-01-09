@@ -1,33 +1,21 @@
-import uvicorn
 from fastapi import FastAPI
+from app.config import settings
 from app.controllers.user_controller import router as user_router
-from app.database.db import Base, engine  
-from app.models.user_model import User 
 
-app = FastAPI(title="User Registration Service")
+# 🔥 IMPORTS REALES SEGÚN TU PROYECTO
+from app.database.db import engine, Base
+from app.models.user_model import User  # 👈 ESTO REGISTRA LA TABLA
 
-# 🔹 Crear tablas al iniciar la aplicación
-@app.on_event("startup")
-def startup_event():
-    print("Verificando y creando tablas en la base de datos...")
-    Base.metadata.create_all(bind=engine)
-    print("Tablas creadas exitosamente.")
+app = FastAPI(title=settings.app_name)
 
-# ✅ CORRECCIÓN: El prefijo "/register" hará que la ruta sea /register/usuario
-app.include_router(user_router, prefix="/register", tags=["Users"])
+# 🔥 CREA LAS TABLAS
+Base.metadata.create_all(bind=engine)
+
+app.include_router(user_router, prefix="/register")
 
 @app.get("/health")
 def health():
-    return {"status": "UP"}
-
-@app.get("/")
-def root():
-    return {"service": "User Registration Service"}
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8081,
-        reload=True
-    )
+    return {
+        "status": "UP",
+        "service": settings.app_name
+    }
