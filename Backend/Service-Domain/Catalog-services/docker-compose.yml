@@ -3,7 +3,9 @@ version: "3.9"
 services:
 
   catalog-service:
-    image: service-domain/catalog-service:1.0.0
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     container_name: catalog-service
     env_file:
       - .env

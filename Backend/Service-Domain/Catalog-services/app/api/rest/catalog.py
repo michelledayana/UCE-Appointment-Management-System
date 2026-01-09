@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.application.handlers.query_handlers import handle_get_services
 
 router = APIRouter(
     prefix="/catalog",
@@ -7,13 +8,4 @@ router = APIRouter(
 
 @router.get("/services")
 def get_services():
-    return [
-        {
-            "id": "1",
-            "name": "Medical Appointment",
-            "prices": {
-                "STUDENT": 5,
-                "GENERAL": 10
-            }
-        }
-    ]
+    return handle_get_services()

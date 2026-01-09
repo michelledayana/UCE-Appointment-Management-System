@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 from app.schemas.service_schema import ServiceCreate, ServiceUpdate
+from app.application.commands.create_service import create_service_command
+from app.application.commands.update_service import update_service_command
+from app.application.commands.disable_service import disable_service_command
 
 router = APIRouter(
     prefix="/admin/catalog",
@@ -8,20 +11,12 @@ router = APIRouter(
 
 @router.post("/services")
 def create_service(service: ServiceCreate):
-    return {
-        "message": "Service created",
-        "data": service
-    }
+    return create_service_command(service)
 
 @router.put("/services/{service_id}")
 def update_service(service_id: str, service: ServiceUpdate):
-    return {
-        "message": f"Service {service_id} updated",
-        "data": service
-    }
+    return update_service_command(service_id, service)
 
 @router.delete("/services/{service_id}")
-def delete_service(service_id: str):
-    return {
-        "message": f"Service {service_id} deleted"
-    }
+def disable_service(service_id: str):
+    return disable_service_command(service_id)

@@ -1,4 +1,11 @@
 import os
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongodb_catalog:27017")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "catalog_db")
+MONGO_URI = os.getenv(
+    "MONGO_URI",
+    "mongodb://mongo:27017"
+)
+
+MONGO_DB_NAME = os.getenv(
+    "MONGO_DB_NAME",
+    "catalog_db"
+)

@@ -1,13 +1,25 @@
-from app.application.commands.create_service import create_service_command
-from app.application.commands.update_service import update_service_command
-from app.application.commands.disable_service import disable_service_command
-from app.schemas.service_schema import ServiceCreate, ServiceUpdate
+from uuid import uuid4
+from app.schemas.service_schema import ServiceCreate
+from app.infrastructure.db.mongo import services_collection
 
 def handle_create_service(service: ServiceCreate):
-    return create_service_command(service)
+    service_doc = {
+        "_id": str(uuid4()),
+        "name": service.name,
+        "description": service.description,
+        "is_active": True,
+        "prices": {
+            "STUDENT": service.student_price,
+            "GENERAL": service.general_price
+        }
+    }
 
-def handle_update_service(service_id: str, service: ServiceUpdate):
-    return update_service_command(service_id, service)
+    services_collection.insert_one(service_doc)
 
-def handle_disable_service(service_id: str):
-    return disable_service_command(service_id)
+    return {
+        "id": service_doc["_id"],
+        "name": service_doc["name"],
+        "description": service_doc["description"],
+        "is_active": service_doc["is_active"],
+        "prices": service_doc["prices"]
+    }
