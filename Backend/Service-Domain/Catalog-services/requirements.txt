@@ -6,3 +6,4 @@ redis
 kafka-python
 pydantic
 python-dotenv
+pymongo
