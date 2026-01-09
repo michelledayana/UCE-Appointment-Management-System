@@ -1,16 +1,41 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.db.database import get_db
-from app.models.user import User
-from app.schemas.user import UserProfileResponse
+from app.models.user import UserProfile
+from app.schemas.user import UserProfileUpdate, UserProfileResponse
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
-@router.get("/{user_id}", response_model=UserProfileResponse)
-def get_user_profile(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
-    return user
+@router.get("/{email}", response_model=UserProfileResponse)
+def get_user_profile(email: str, db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).filter(
+        UserProfile.email == email
+    ).first()
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    return profile
+
+
+@router.put("/{email}")
+def update_profile(
+    email: str,
+    data: UserProfileUpdate,
+    db: Session = Depends(get_db)
+):
+    profile = db.query(UserProfile).filter(
+        UserProfile.email == email
+    ).first()
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    for key, value in data.dict(exclude_unset=True).items():
+        setattr(profile, key, value)
+
+    db.commit()
+
+    return {"message": "Profile updated successfully"}

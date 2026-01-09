@@ -2,5 +2,6 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
-pydantic
-pydantic-settings
+kafka-python
+python-dotenv
+pydantic-settings>=2.0
