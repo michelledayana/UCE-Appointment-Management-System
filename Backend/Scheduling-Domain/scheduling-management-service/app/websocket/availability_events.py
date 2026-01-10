@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.websocket.connection_manager import ConnectionManager
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -10,22 +11,22 @@ manager = ConnectionManager()
 @websocket_router.websocket("/ws/availability")
 async def availability_socket(websocket: WebSocket):
     await manager.connect(websocket)
-    logger.info("Availability service connected")
+    logger.info("🟢 WebSocket client connected")
 
     try:
         while True:
-            data = await websocket.receive_json()
-            logger.info(f"Availability event received: {data}")
+            # Keep connection alive (no request-response)
+            await asyncio.sleep(10)
 
-            # simulate validation
-            response = {
-                "event": "availability_response",
-                "service_id": data["service_id"],
+            event = {
+                "event": "availability_update",
+                "service_id": "dentistry",
                 "available": True
             }
 
-            await websocket.send_json(response)
+            await manager.broadcast(event)
+            logger.info(" Availability event sent")
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        logger.warning("Availability service disconnected")
+        logger.warning(" WebSocket client disconnected")
