@@ -17,7 +17,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/schedules", tags=["Schedules"])
+# 🔥 SIN prefix aquí
+app.include_router(router)
 app.include_router(websocket_router)
 
 @app.get("/health")
