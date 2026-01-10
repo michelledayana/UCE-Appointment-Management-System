@@ -1,23 +1,12 @@
 services:
   user-registration-service:
-    image: user-registration-service:latest
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: user-registration-service
-    environment:
-      SERVICE_NAME: user-registration-service
-      APP_PORT: 8081
-
-      POSTGRES_DB: users_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST: db-registration
-      POSTGRES_PORT: 5432
-
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      KAFKA_TOPIC_NAME: user_registered_topic
-
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "8081:8081"
     networks:
