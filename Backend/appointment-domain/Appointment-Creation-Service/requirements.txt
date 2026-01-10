@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+kafka-python
+paho-mqtt
+pydantic-settings
