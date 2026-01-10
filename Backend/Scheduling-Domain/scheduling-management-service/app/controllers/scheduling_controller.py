@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends
-from app.schemas.schedule_schema import ScheduleCreate, ScheduleResponse
-from app.services.schedule_service import ScheduleService
 
-router = APIRouter()
+from fastapi import APIRouter
+from fastapi import APIRouter
+from app.schemas.schedule_schema import ScheduleCreate, ScheduleResponse
+from app.services.schedule_service import create_schedule
+
+router = APIRouter(
+    prefix="/schedules",
+    tags=["Schedules"]
+)
+
 
 @router.post("/", response_model=ScheduleResponse)
-def create_schedule(data: ScheduleCreate):
-    service = ScheduleService()
-    return service.create_schedule(data)
+def create(schedule: ScheduleCreate):
+    return create_schedule(schedule)
