@@ -1,18 +1,12 @@
-from app.schemas.schedule_schema import ScheduleCreate, ScheduleResponse
 import uuid
-import logging
+from app.schemas.schedule_schema import ScheduleCreate
 
-logger = logging.getLogger(__name__)
 
-class ScheduleService:
-
-    def create_schedule(self, data: ScheduleCreate) -> ScheduleResponse:
-        logger.info("Creating schedule slot")
-
-        return ScheduleResponse(
-            id=str(uuid.uuid4()),
-            service_id=data.service_id,
-            date=data.date,
-            time_slot=data.time_slot,
-            available=True
-        )
+def create_schedule(schedule: ScheduleCreate):
+    return {
+        "id": str(uuid.uuid4()),
+        "service_id": schedule.service_id,
+        "date": schedule.date,
+        "time_slot": schedule.time_slot,
+        "available": True
+    }
