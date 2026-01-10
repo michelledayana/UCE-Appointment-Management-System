@@ -1,9 +1,0 @@
-user_profile_service:
-    build: ./user-profile-service
-    ports:
-      - "8083:8083"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db_profile:5432/profile_db
-    depends_on:
-      - db_profile
-      - kafka
