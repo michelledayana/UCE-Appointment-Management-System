@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  appointment-creation-service:
+    container_name: appointment-creation-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8087:8087"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MQTT_BROKER: hivemq
+      MQTT_PORT: 1883
+    depends_on:
+      - hivemq
+    networks:
+      - user-network
+
+  hivemq:
+    image: hivemq/hivemq-ce
+    container_name: hivemq
+    ports:
+      - "1883:1883"
+      - "8088:8080"
+    networks:
+      - user-network
+
+networks:
+  user-network:
+    external: true
