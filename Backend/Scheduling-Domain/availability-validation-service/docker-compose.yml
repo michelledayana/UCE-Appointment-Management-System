@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  availability-validation-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: availability-validation-service
+    ports:
+      - "8086:8086"
+    environment:
+      REDIS_HOST: redis_catalog
+      REDIS_PORT: 6379
+      MONGO_URI: mongodb://mongodb_catalog:27017/availability_db
+    networks:
+      - user-network
+
+networks:
+  user-network:
+    external: true
