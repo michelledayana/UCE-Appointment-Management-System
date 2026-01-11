@@ -1,5 +1,9 @@
 fastapi
 uvicorn
+pydantic
+pydantic-settings
+sqlalchemy
 kafka-python
 paho-mqtt
-pydantic-settings
+python-dotenv
+psycopg2-binary
