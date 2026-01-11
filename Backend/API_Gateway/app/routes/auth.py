@@ -1,8 +1,12 @@
 from fastapi import APIRouter
-from app.services.auth_client import login
+import requests
+from app.config import settings
 
-router = APIRouter(prefix="/auth")
+router = APIRouter()
 
 @router.post("/login")
-async def login_user(data: dict):
-    return await login(data)
+def login(payload: dict):
+    return requests.post(
+        f"{settings.AUTH_SERVICE_URL}/auth/login",
+        json=payload
+    ).json()
