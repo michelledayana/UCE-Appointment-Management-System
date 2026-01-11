@@ -2,33 +2,32 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 
-from app.db.database import get_db
+from app.db.session import get_db
 from app.models.appointment import Appointment
-from app.schemas.appointment import AppointmentResponse, UpdateAppointmentStatus
+from app.schemas.appointment import AppointmentStatusUpdate, AppointmentResponse
+from app.core.kafka import publish_event
 
-router = APIRouter(
-    prefix="/appointments",
-    tags=["Appointments"]
-)
+router = APIRouter(prefix="/appointments", tags=["appointments"])
 
 
-@router.patch("/{appointment_id}", response_model=AppointmentResponse)
+@router.patch("/{appointment_id}/status", response_model=AppointmentResponse)
 def update_status(
     appointment_id: UUID,
-    body: UpdateAppointmentStatus,
+    payload: AppointmentStatusUpdate,
     db: Session = Depends(get_db)
 ):
-    appointment = (
-        db.query(Appointment)
-        .filter(Appointment.id == appointment_id)
-        .first()
-    )
+    appointment = db.get(Appointment, appointment_id)
 
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    appointment.status = body.status
+    appointment.status = payload.status
     db.commit()
     db.refresh(appointment)
+
+    publish_event("appointment.updated", {
+        "id": str(appointment.id),
+        "status": appointment.status
+    })
 
     return appointment
