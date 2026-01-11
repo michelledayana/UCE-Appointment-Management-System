@@ -3,12 +3,17 @@ version: "3.9"
 services:
 
   catalog-service:
+    image: dayanaheredia/catalog-service:latest
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: catalog-service
+    restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_TOPIC_SERVICE_EVENTS=service-events
     ports:
       - "8084:8084"
     depends_on:
@@ -20,6 +25,7 @@ services:
   mongo:
     image: mongo:latest
     container_name: mongodb_catalog
+    restart: unless-stopped
     ports:
       - "27017:27017"
     networks:
@@ -28,6 +34,7 @@ services:
   redis:
     image: redis:7
     container_name: redis_catalog
+    restart: unless-stopped
     ports:
       - "6379:6379"
     networks:

@@ -2,6 +2,9 @@ from app.schemas.service_schema import ServiceCreate
 from app.infrastructure.db.mongo import services_collection
 from app.infrastructure.kafka.producer import publish_service_event
 from app.infrastructure.redis.cache import clear_services_cache
+import logging
+
+logger = logging.getLogger(__name__)
 
 def create_service_command(service: ServiceCreate):
     service_doc = {
@@ -15,7 +18,6 @@ def create_service_command(service: ServiceCreate):
     }
 
     result = services_collection.insert_one(service_doc)
-
     service_id = str(result.inserted_id)
 
     event_payload = {
@@ -24,9 +26,17 @@ def create_service_command(service: ServiceCreate):
         "prices": service_doc["prices"]
     }
 
-    publish_service_event("SERVICE_CREATED", event_payload)
+    # 🔒 Kafka NO puede tumbar el servicio
+    try:
+        publish_service_event("SERVICE_CREATED", event_payload)
+    except Exception as e:
+        logger.error(f"Kafka error on SERVICE_CREATED: {e}")
 
-    clear_services_cache()
+    # Redis tampoco debe romper el flujo
+    try:
+        clear_services_cache()
+    except Exception as e:
+        logger.error(f"Redis cache clear error: {e}")
 
     return {
         "id": service_id,

@@ -3,8 +3,17 @@ from app.schemas.service_schema import ServiceUpdate
 from app.infrastructure.kafka.producer import publish_service_event
 from app.infrastructure.redis.cache import clear_services_cache
 from bson import ObjectId
+from bson.errors import InvalidId
+import logging
+
+logger = logging.getLogger(__name__)
 
 def update_service_command(service_id: str, service: ServiceUpdate):
+    try:
+        object_id = ObjectId(service_id)
+    except InvalidId:
+        raise ValueError("Invalid service ID format")
+
     update_data = {}
 
     if service.name is not None:
@@ -22,19 +31,30 @@ def update_service_command(service_id: str, service: ServiceUpdate):
         return {"message": "Nothing to update"}
 
     result = services_collection.update_one(
-        {"_id": ObjectId(service_id)},
+        {"_id": object_id},
         {"$set": update_data}
     )
 
     if result.matched_count == 0:
         raise ValueError("Service not found")
 
-    publish_service_event("SERVICE_UPDATED", {
-        "id": service_id,
-        "updated_fields": update_data
-    })
+    # 🔒 Kafka es eventual
+    try:
+        publish_service_event(
+            "SERVICE_UPDATED",
+            {
+                "id": service_id,
+                "updated_fields": list(update_data.keys())
+            }
+        )
+    except Exception as e:
+        logger.error(f"Kafka error on SERVICE_UPDATED: {e}")
 
-    clear_services_cache()
+    # 🔒 Redis es opcional
+    try:
+        clear_services_cache()
+    except Exception as e:
+        logger.error(f"Redis cache clear error: {e}")
 
     return {
         "id": service_id,
