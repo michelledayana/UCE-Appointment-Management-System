@@ -1,5 +1,8 @@
+version: "3.9"
+
 services:
   user-registration-service:
+    image: dayanaheredia/user-registration-service:latest
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -9,6 +12,21 @@ services:
       - .env
     ports:
       - "8081:8081"
+    depends_on:
+      - db-registration
+    networks:
+      - user-network
+
+  db-registration:
+    image: postgres:15
+    container_name: db-registration
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
     networks:
       - user-network
 

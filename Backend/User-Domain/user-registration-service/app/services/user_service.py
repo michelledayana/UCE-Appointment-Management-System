@@ -34,6 +34,7 @@ class UserService:
             "id": new_user.id,
             "email": new_user.email,
             "full_name": new_user.full_name,
+            "password_hash": new_user.password_hash,
             "user_type": new_user.user_type
         })
 

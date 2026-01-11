@@ -1,29 +1,21 @@
-import threading
 from fastapi import FastAPI
-
-from app.database.db import init_db
 from app.controllers.auth_controller import router as auth_router
 from app.services.kafka_consumer import iniciar_consumidor
+from app.database.db import init_db
+import threading
 
-app = FastAPI(title="User Authentication Service")
+app = FastAPI()
+
+app.include_router(auth_router)
 
 @app.on_event("startup")
 def startup_event():
-    print("📦 Initializing Auth DB...")
+    # 🔥 CREA TABLAS
     init_db()
 
-    print("🚀 Starting Kafka Consumer (Auth Service)...")
+    # 🔥 INICIA KAFKA
     thread = threading.Thread(
         target=iniciar_consumidor,
         daemon=True
     )
     thread.start()
-
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
-
-@app.get("/health")
-def health_check():
-    return {
-        "status": "ok",
-        "service": "user-authentication-service"
-    }

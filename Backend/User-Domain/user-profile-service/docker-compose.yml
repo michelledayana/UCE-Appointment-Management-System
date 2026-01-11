@@ -1,37 +1,37 @@
-# 6️⃣ PostgreSQL - User Profile DB (Independiente)
-  db-profile:
-    image: postgres:15-alpine
-    container_name: db_profile
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: profile_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d profile_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - microservices-net
-
-  # 7️⃣ User Profile Service
+services:
   user-profile-service:
+    image: dayanaheredia/user-profile-service:latest
     build:
-      context: ./user-profile-service
-      dockerfile: Dockerfile
-    container_name: user_profile_service
-    depends_on:
-      db-profile:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    environment:
-      # Nota que aquí apuntamos a 'db-profile' y 'profile_db'
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db-profile:5432/profile_db
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      PYTHONUNBUFFERED: "1"
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: user-profile-service
+    env_file:
+      - .env
     ports:
       - "8083:8083"
+    depends_on:
+      - db-profile     # ✅ SOLO la BD (sí está en este compose)
     networks:
-      - microservices-net
+      - user-network
+
+  db-profile:
+    image: postgres:15-alpine
+    container_name: db-profile
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5436:5432"
+    volumes:
+      - profile_db_data:/var/lib/postgresql/data
+    networks:
+      - user-network
+
+volumes:
+  profile_db_data:
+
+networks:
+  user-network:
+    external: true

@@ -5,7 +5,12 @@ from app.db.database import get_db
 from app.models.user import UserProfile
 from app.schemas.user import UserProfileUpdate, UserProfileResponse
 
-router = APIRouter(prefix="/profile", tags=["Profile"])
+router = APIRouter(prefix="/profiles", tags=["Profiles"])
+
+
+@router.get("", response_model=list[UserProfileResponse])
+def get_all_profiles(db: Session = Depends(get_db)):
+    return db.query(UserProfile).all()
 
 
 @router.get("/{email}", response_model=UserProfileResponse)
@@ -37,5 +42,7 @@ def update_profile(
         setattr(profile, key, value)
 
     db.commit()
+    db.refresh(profile)
 
     return {"message": "Profile updated successfully"}
+
