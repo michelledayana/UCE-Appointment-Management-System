@@ -1,0 +1,28 @@
+services:
+  administration-service:
+    image: dayanaheredia/administration-service:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: administration-service
+    env_file:
+      - .env
+    ports:
+      - "8090:8090"
+    depends_on:
+      - mongodb_admin
+    networks:
+      - user-network
+
+  mongodb_admin:
+    image: mongo:6
+    container_name: mongodb_admin
+    ports:
+      - "27019:27017"
+    networks:
+      - user-network
+
+networks:
+  user-network:
+    external: true
+    name: user-network
