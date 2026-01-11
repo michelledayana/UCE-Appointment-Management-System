@@ -1,4 +1,4 @@
-from app.infrastructure.db.mongo import audit_collection
+from app.database.mongo import audit_collection
 from datetime import datetime
 
 def handle_event(event: dict):
