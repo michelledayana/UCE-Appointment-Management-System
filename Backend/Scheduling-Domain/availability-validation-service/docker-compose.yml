@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   availability-validation-service:
+    image: dayanaheredia/availability-validation-service:latest
     build:
       context: .
       dockerfile: docker/Dockerfile
