@@ -1,19 +1,18 @@
 from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
-
-class UpdateAppointmentStatus(BaseModel):
+class AppointmentStatusUpdate(BaseModel):
     status: str
 
 
 class AppointmentResponse(BaseModel):
-    id: UUID               # 🔥 ERA str → ERROR
+    id: UUID
     user_id: str
     service_id: str
     scheduled_time: datetime
     status: str
-    created_at: datetime
+    updated_at: datetime | None
 
     class Config:
         from_attributes = True
