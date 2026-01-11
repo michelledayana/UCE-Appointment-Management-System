@@ -1,8 +1,11 @@
-from fastapi import Depends, HTTPException, Request
+from fastapi import Header, HTTPException
+from app.security.jwt_handler import decode_token
 
-def require_role(role: str):
-    def checker(request: Request):
-        user = request.state.user
-        if user.get("role") != role:
-            raise HTTPException(403, "Insufficient permissions")
-    return checker
+def admin_required(authorization: str = Header(...)):
+    token = authorization.replace("Bearer ", "")
+    payload = decode_token(token)
+
+    if not payload or payload.get("role") != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    return payload
