@@ -1,0 +1,15 @@
+services:
+  api-gateway:
+    build: .
+    image: dayanaheredia/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    networks:
+      - user-network
+
+networks:
+  user-network:
+    external: true
