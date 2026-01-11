@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   scheduling-management-service:
+    image: dayanaheredia/scheduling-management-service:latest
     build:
       context: .
       dockerfile: docker/Dockerfile
