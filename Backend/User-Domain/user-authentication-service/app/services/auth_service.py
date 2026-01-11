@@ -1,18 +1,21 @@
-from app.store.user_store import users
+from app.database.db import SessionLocal
+from app.models.auth_model import AuthUser
 from app.security.password import verify_password
 
 
 def authenticate_user(email: str, password: str):
-    user_data = users.get(email)
+    db = SessionLocal()
+    try:
+        user = db.query(AuthUser).filter(
+            AuthUser.email == email
+        ).first()
 
-    if not user_data:
-        return None
+        if not user:
+            return None
 
-    if not verify_password(password, user_data["password_hash"]):
-        return None
+        if not verify_password(password, user.password_hash):
+            return None
 
-    # 🔥 Retornamos una estructura consistente
-    return {
-        "email": email,
-        "user_type": user_data["user_type"]
-    }
+        return user
+    finally:
+        db.close()
