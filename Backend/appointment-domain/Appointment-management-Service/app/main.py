@@ -1,13 +1,12 @@
 from fastapi import FastAPI
-from app.api.appointments import router
-from app.db.database import Base
-from app.db.session import engine
-from threading import Thread
-from app.core.kafka import start_consumer
-
-Base.metadata.create_all(bind=engine)
+from app.api.appointments import router as appointment_router
+from app.db.database import init_db
 
 app = FastAPI(title="Appointment Management Service")
-app.include_router(router)
 
-Thread(target=start_consumer, daemon=True).start()
+@app.on_event("startup")
+def startup():
+    init_db()
+
+app.include_router(appointment_router, prefix="/appointments", tags=["Appointments"])
+
