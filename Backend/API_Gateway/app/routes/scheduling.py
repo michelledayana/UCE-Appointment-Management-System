@@ -7,7 +7,7 @@ router = APIRouter()
 @router.post("/")
 def create_schedule(data: dict):
     return requests.post(
-        f"{settings.SCHEDULING_SERVICE_URL}/schedules/schedules/",
+        f"{settings.SCHEDULING_MANAGEMENT_URL}/schedules",
         json=data
     ).json()
 

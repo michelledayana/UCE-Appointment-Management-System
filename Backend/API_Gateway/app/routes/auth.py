@@ -5,8 +5,8 @@ from app.config import settings
 router = APIRouter()
 
 @router.post("/login")
-def login(payload: dict):
+def login(data: dict):
     return requests.post(
         f"{settings.AUTH_SERVICE_URL}/auth/login",
-        json=payload
+        json=data
     ).json()

@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    PROJECT_NAME: str = "API Gateway"
+
     # JWT
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
@@ -29,7 +31,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        extra = "forbid"   # 👈 esto está bien, nos protege
+        extra = "forbid"
 
 
 settings = Settings()

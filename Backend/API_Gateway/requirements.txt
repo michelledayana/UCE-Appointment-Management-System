@@ -1,13 +1,6 @@
 fastapi
 uvicorn[standard]
-
-# HTTP
 requests
-
-# JWT
-python-jose
-passlib[bcrypt]
-
-# Pydantic v2
-pydantic>=2.0
-pydantic-settings>=2.0
+httpx
+python-jose[cryptography]
+pydantic-settings
