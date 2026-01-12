@@ -1,20 +1,25 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.env
-
-# Terraform
-.terraform/
+# --- Archivos de estado de Terraform ---
+# Estos contienen el estado actual de tu infraestructura y pueden tener datos sensibles.
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
+
+# --- Directorios de trabajo ---
+# Contienen los binarios de los proveedores y módulos descargados.
+.terraform/
+
+# --- Archivos de variables sensibles ---
+# NUNCA subas archivos que contengan contraseñas o llaves API.
+*.tfvars
+*.tfvars.json
+
+# --- Archivos de respaldo y temporales ---
+*.backup
+*.lock.hcl
 .terraform.lock.hcl
 
-# IDEs
-.vscode/
-.idea/
+# --- Archivos de registro (logs) ---
+*.log
+crash.log
 
-# OS
-.DS_Store
-Thumbs.db
+# --- Variables de entorno locales ---
+.env
