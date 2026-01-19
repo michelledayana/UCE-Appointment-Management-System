@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Scheduling Management Service"
@@ -15,7 +16,9 @@ class Settings(BaseSettings):
 
     cors_origins: str = "*"
 
-    class Config:
-        env_file = ".env"
+    model_config = ConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
 
 settings = Settings()
