@@ -1,7 +1,0 @@
-aws_region             = "us-east-1"
-project_name           = "appointment-qa"
-vpc_cidr               = "10.0.0.0/16"
-public_subnet_cidr     = "10.0.1.0/24"
-private_subnet_cidr    = "10.0.2.0/24"
-bastion_instance_type  = "t3.micro"
-key_pair_name          = "aws-academy-key"

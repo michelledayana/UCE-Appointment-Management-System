@@ -1,40 +1,48 @@
+resource "aws_security_group" "postgres_sg" {
+  name        = "postgres-sg"
+  description = "Security group for PostgreSQL EC2"
+  vpc_id      = var.vpc_id
 
-resource "aws_db_subnet_group" "postgres" {
-  name = "lab8-postgres-subnet-group"
+  # SSH desde tu IP (o bastion después)
+  ingress {
+    description = "SSH access"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
 
-  subnet_ids = [
-    var.private_subnet_id,
-    var.private_subnet_b_id
-  ]
+  # PostgreSQL (por ahora abierto solo a VPC)
+  ingress {
+    description = "Postgres access from VPC"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
-    Name = "lab8-postgres-subnet-group"
-    Env  = "QA"
+    Name = "postgres-sg"
   }
 }
 
-resource "aws_db_instance" "postgres" {
-  identifier = "lab8-postgres-db"
-
-  engine         = "postgres"
-
-  instance_class    = "db.t3.micro"
-  allocated_storage = 20
-
-  db_name  = "main_db"
-  username = "postgres"
-  password = var.db_password
-
-  db_subnet_group_name   = aws_db_subnet_group.postgres.name
-  vpc_security_group_ids = [var.security_group_id]
-
-  publicly_accessible = false
-  skip_final_snapshot = true
+resource "aws_instance" "postgres" {
+  ami                         = "ami-0c02fb55956c7d316" # Amazon Linux 2
+  instance_type               = "t3.micro"
+  subnet_id                   = var.public_subnet_id
+  vpc_security_group_ids      = [aws_security_group.postgres_sg.id]
+  key_name                    = var.key_name
+  associate_public_ip_address = true
 
   tags = {
-    Name = "lab8-postgres"
-    Env  = "QA"
+    Name = "postgres-ec2"
+    Role = "database"
   }
 }
-
-

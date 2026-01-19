@@ -1,20 +1,24 @@
-variable "private_subnet_id" {
-  description = "Private subnet A ID"
+variable "aws_region" {
+  description = "AWS region"
   type        = string
 }
 
-variable "private_subnet_b_id" {
-  description = "Private subnet B ID"
+variable "vpc_id" {
+  description = "Existing VPC ID"
   type        = string
 }
 
-variable "security_group_id" {
-  description = "Security group for Postgres"
+variable "public_subnet_id" {
+  description = "Public subnet ID where Postgres EC2 will live"
   type        = string
 }
 
-variable "db_password" {
-  description = "Postgres master password"
+variable "key_name" {
+  description = "SSH key pair name"
   type        = string
-  sensitive   = true
+}
+
+variable "my_ip" {
+  description = "Your public IP for SSH access"
+  type        = string
 }

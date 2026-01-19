@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Appointment App",
+    "slug": "appointment-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "sdkVersion": "50.0.0"
+  }
+}

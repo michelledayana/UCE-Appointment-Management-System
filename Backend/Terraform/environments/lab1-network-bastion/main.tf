@@ -7,8 +7,7 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "lab1-vpc"
-    Env  = "QA"
+    Name = "appointment-qa-vpc"
   }
 }
 
@@ -19,7 +18,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = {
-    Name = "lab1-igw"
+    Name = "appointment-qa-igw"
   }
 }
 
@@ -33,7 +32,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "lab1-public-subnet"
+    Name = "appointment-qa-public-subnet"
   }
 }
 
@@ -46,7 +45,7 @@ resource "aws_subnet" "private_a" {
   availability_zone = "us-east-1a"
 
   tags = {
-    Name = "lab1-private-subnet-a"
+    Name = "appointment-qa-private-subnet-a"
   }
 }
 
@@ -59,7 +58,7 @@ resource "aws_subnet" "private_b" {
   availability_zone = "us-east-1b"
 
   tags = {
-    Name = "lab1-private-subnet-b"
+    Name = "appointment-qa-private-subnet-b"
   }
 }
 
@@ -75,7 +74,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "lab1-public-rt"
+    Name = "appointment-qa-public-rt"
   }
 }
 
@@ -85,18 +84,17 @@ resource "aws_route_table_association" "public" {
 }
 
 # -------------------------
-# Bastion SG
+# Security Group Bastion
 # -------------------------
 resource "aws_security_group" "bastion_sg" {
-  name        = "lab1-bastion-sg"
-  description = "Allow SSH"
-  vpc_id      = aws_vpc.this.id
+  name   = "appointment-qa-bastion-sg"
+  vpc_id = aws_vpc.this.id
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.my_ip]
   }
 
   egress {
@@ -131,7 +129,7 @@ resource "aws_instance" "bastion" {
   key_name               = "qa-key"
 
   tags = {
-    Name = "lab1-bastion"
+    Name = "appointment-qa-bastion"
   }
 }
 

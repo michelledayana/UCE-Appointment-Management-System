@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
@@ -14,8 +15,10 @@ class Settings(BaseSettings):
     KAFKA_BOOTSTRAP_SERVERS: str
     KAFKA_TOPIC_NAME: str
 
-    class Config:
-        env_file = ".env"
+    model_config = ConfigDict(
+        env_file=".env",
+        extra="allow"   # 👈 ESTA ES LA CLAVE
+    )
 
 
 settings = Settings()

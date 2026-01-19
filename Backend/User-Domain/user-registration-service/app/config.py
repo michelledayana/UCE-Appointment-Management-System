@@ -1,7 +1,7 @@
+
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    # App
     app_name: str = "User Registration Service"
 
     # Database

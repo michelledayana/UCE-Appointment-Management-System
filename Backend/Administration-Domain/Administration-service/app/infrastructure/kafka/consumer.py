@@ -3,6 +3,9 @@ from kafka import KafkaConsumer
 from app.config import KAFKA_BOOTSTRAP_SERVERS
 from app.application.handlers.event_handlers import handle_event
 
+def process_message(event_data: dict):
+    handle_event(event_data)
+
 def start_kafka_consumer():
     consumer = KafkaConsumer(
         "user_registered_topic",
@@ -16,5 +19,4 @@ def start_kafka_consumer():
     )
 
     for message in consumer:
-        event_data = message.value
-        handle_event(event_data)
+        process_message(message.value)

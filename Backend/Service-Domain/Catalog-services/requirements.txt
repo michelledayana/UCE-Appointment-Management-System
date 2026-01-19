@@ -7,3 +7,5 @@ kafka-python
 pydantic
 python-dotenv
 pymongo
+httpx
+pytest

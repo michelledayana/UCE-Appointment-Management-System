@@ -4,7 +4,7 @@ services:
     image: dayanaheredia/api-gateway:latest
     container_name: api-gateway
     ports:
-      - "9000:9000"
+      - "8000:8000"
     env_file:
       - .env
     networks:

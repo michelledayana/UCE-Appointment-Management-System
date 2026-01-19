@@ -39,9 +39,12 @@ def create_service_command(service: ServiceCreate):
         logger.error(f"Redis cache clear error: {e}")
 
     return {
+    "message": "Service created successfully",
+    "service": {
         "id": service_id,
         "name": service.name,
         "description": service.description,
         "is_active": True,
         "prices": service_doc["prices"]
     }
+}
