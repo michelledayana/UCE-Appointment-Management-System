@@ -1,4 +1,4 @@
-from app.infrastructure.db.mongo import services_collection
+from app.infrastructure.db.mongo import get_services_collection
 from app.infrastructure.redis.cache import (
     get_services_cache,
     set_services_cache
@@ -12,7 +12,8 @@ def get_services_query():
         return cached_services
 
     # 2️⃣ Query MongoDB
-    services = list(services_collection.find({}, {"_id": 0}))
+    collection = get_services_collection()
+    services = list(collection.find({}, {"_id": 0}))
 
     # 3️⃣ Store in cache
     set_services_cache(services)

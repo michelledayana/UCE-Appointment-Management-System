@@ -8,17 +8,15 @@ SERVICE_NAME = os.getenv("SERVICE_NAME", "catalog-service")
 # =========================
 # MongoDB
 # =========================
-MONGO_HOST = os.getenv("MONGO_HOST", "mongodb_catalog")
-MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))
+MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB_NAME = os.getenv("MONGO_DB", "catalog_db")
-
-MONGO_URI = f"mongodb://{MONGO_HOST}:{MONGO_PORT}"
 
 # =========================
 # Redis
 # =========================
 REDIS_HOST = os.getenv("REDIS_HOST", "redis_catalog")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))  # base por defecto 0
 
 # =========================
 # Kafka
