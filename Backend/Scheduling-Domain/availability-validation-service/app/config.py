@@ -4,11 +4,11 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     REDIS_HOST: str = "redis_catalog"
     REDIS_PORT: int = 6379
-    MONGO_URI: str = "mongodb://mongodb_catalog:27017/availability_db"
+    MONGO_URI: str = "mongodb://54.88.248.219:27017/availability_db"
 
     class Config:
         env_file = ".env"
-        extra = "ignore"  # 🔥 CLAVE
+        extra = "ignore"
 
 
 settings = Settings()
