@@ -1,24 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+# app/api/appointments.py
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from uuid import UUID
-from ..db.database import get_db
-from ..services.appointment_service import get_appointment
-from ..schemas.appointment import AppointmentResponse
+from app.db.database import get_db  # <- Import correcto
+from app.models.appointment import Appointment
 
-router = APIRouter(
-    prefix="/appointments",
-    tags=["Appointments"]
-)
+router = APIRouter(prefix="/appointments")
 
-@router.get("/{appointment_id}", response_model=AppointmentResponse)
-def read_appointment(
-    appointment_id: UUID,
-    db: Session = Depends(get_db)
-):
-    appointment = get_appointment(db, appointment_id)
-    if not appointment:
-        raise HTTPException(
-            status_code=404,
-            detail="Appointment not found"
-        )
-    return appointment
+# Ejemplo endpoint
+@router.get("/")
+def read_appointments(db: Session = Depends(get_db)):
+    return db.query(Appointment).all()
