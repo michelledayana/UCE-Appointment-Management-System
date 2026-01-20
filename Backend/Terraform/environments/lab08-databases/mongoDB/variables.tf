@@ -9,7 +9,7 @@ variable "vpc_id" {
 }
 
 variable "public_subnet_id" {
-  description = "Public subnet ID where MongoDB EC2 will live"
+  description = "Public subnet ID"
   type        = string
 }
 
@@ -18,7 +18,7 @@ variable "key_name" {
   type        = string
 }
 
-variable "bastion_public_ip_cidr" {
-  description = "CIDR of Bastion to allow SSH"
+variable "my_ip" {
+  description = "Your public IP for SSH and Mongo access"
   type        = string
 }
