@@ -1,17 +1,29 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
+# -----------------------------
+# Security Group para Redis
+# -----------------------------
 resource "aws_security_group" "redis_sg" {
-  name        = "lab9-redis-sg"
-  description = "Allow Redis access"
+  name        = "redis-public-sg"
+  description = "Allow SSH and Redis from my IP"
   vpc_id      = var.vpc_id
 
   ingress {
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [var.bastion_sg_id]
+    description = "SSH from my IP"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.my_ip]
+  }
+
+  ingress {
+    description = "Redis from my IP"
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = [var.my_ip]
   }
 
   egress {
@@ -22,39 +34,34 @@ resource "aws_security_group" "redis_sg" {
   }
 
   tags = {
-    Name = "lab9-redis-sg"
-    Env  = "QA"
+    Name = "redis-public-sg"
   }
 }
 
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
+# -----------------------------
+# EC2 Instance Redis
+# -----------------------------
+resource "aws_instance" "redis_instance" {
+  ami                         = "ami-0c02fb55956c7d316" # Amazon Linux 2
+  instance_type               = "t3.micro"
+  key_name                    = var.key_name
+  subnet_id                   = var.public_subnet_id
+  vpc_security_group_ids      = [aws_security_group.redis_sg.id]
+  associate_public_ip_address = true
 
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  tags = {
+    Name = "redis-instance"
   }
-}
-
-resource "aws_instance" "redis" {
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
-  subnet_id              = var.private_subnet_id
-  vpc_security_group_ids = [aws_security_group.redis_sg.id]
 
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
               amazon-linux-extras enable redis6
-              yum install redis -y
-              sed -i 's/^bind 127.0.0.1/bind 0.0.0.0/' /etc/redis.conf
+              yum install -y redis
               systemctl enable redis
               systemctl start redis
               EOF
-
-  tags = {
-    Name = "lab9-redis"
-    Env  = "QA"
-  }
 }
+
+
+

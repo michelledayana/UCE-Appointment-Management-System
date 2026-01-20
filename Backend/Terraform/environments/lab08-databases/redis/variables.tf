@@ -1,7 +1,5 @@
+variable "aws_region" {}
 variable "vpc_id" {}
-variable "private_subnet_id" {}
-variable "bastion_sg_id" {}
-
-variable "instance_type" {
-  default = "t3.micro"
-}
+variable "public_subnet_id" {}
+variable "key_name" {}
+variable "my_ip" {}
