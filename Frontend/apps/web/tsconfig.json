@@ -19,9 +19,20 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/contexts/*": ["../shared/contexts/*"],
+      "@/components/*": ["../shared/components/*"],
+      "@/lib/*": ["../shared/lib/*"],
+      "@/types/*": ["../shared/types/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "../shared/**/*.ts",
+    "../shared/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
