@@ -1,14 +1,18 @@
-output "alb_dns" {
-  description = "DNS name of the API Gateway ALB"
-  value       = aws_lb.api_gateway_alb.dns_name
+# =========================
+# OUTPUTS
+# =========================
+output "instance_id" {
+  value = aws_instance.api_instance.id
 }
 
-output "api_gateway_instance_id" {
-  description = "ID of the API Gateway EC2 instance"
-  value       = aws_instance.api_gateway.id
+output "instance_public_ip" {
+  value = aws_instance.api_instance.public_ip
 }
 
-output "api_gateway_public_ip" {
-  description = "Public IP of API Gateway EC2 instance"
-  value       = aws_eip.api_gateway_eip.public_ip
+output "lb_dns_name" {
+  value = aws_lb.api_lb.dns_name
+}
+
+output "vpc_id" {
+  value = aws_vpc.api_vpc.id
 }
