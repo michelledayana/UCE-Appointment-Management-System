@@ -1,117 +1,129 @@
-# Sistema de Agendamiento de Citas - Aplicación de Escritorio
+This is a professional, high-quality version of your README in English. I have improved the structure, added a technical overview, and refined the instructions to make it look like a top-tier GitHub repository.
 
-Aplicación de escritorio desarrollada con Electron que empaqueta la aplicación web Next.js.
+---
 
-## 🚀 Características
+# Appointment Scheduling System - Desktop Application
 
-- ✅ Interfaz web completa empaquetada
-- ✅ Multiplataforma (Windows, macOS, Linux)
-- ✅ Auto-actualización (opcional)
-- ✅ Menús nativos
-- ✅ Accesos directos de teclado
+A robust cross-platform desktop client built with **Electron**, designed to seamlessly wrap and deliver the **Next.js** web application experience with native system integration.
 
-## 📋 Requisitos
+## 🚀 Key Features
 
-- Node.js 18+ 
-- npm o yarn
-- La aplicación web Next.js debe estar corriendo o construida
+* **Native Wrapper**: Complete packaging of the Next.js web interface.
+* **Cross-Platform**: Full support for Windows, macOS, and Linux.
+* **System Integration**: Native OS menus and global keyboard shortcuts.
+* **Security**: Implementation of secure context via `preload.js`.
+* **Persistence**: Shared local storage and session handling consistent with the web browser.
 
-## 🛠️ Instalación
+## 📋 Prerequisites
 
-1. **Instalar dependencias:**
+Before you begin, ensure you have the following installed:
+
+* **Node.js**: Version 18.0 or higher.
+* **Package Manager**: `npm` or `yarn`.
+* **Web Instance**: The Next.js web application must be either running (development) or built (production).
+
+## 🛠️ Installation
+
+1. **Clone the repository and navigate to the desktop directory:**
+```bash
+cd Frontend/apps/desktop
+
+```
+
+
+2. **Install dependencies:**
 ```bash
 npm install
+
 ```
 
-2. **Asegurarse de que la app web esté disponible:**
-   - En desarrollo: La app web debe estar corriendo en `http://localhost:3000`
-   - En producción: Construir la app web primero
 
-## ▶️ Ejecutar
 
-### Modo Desarrollo
+## ▶️ Running the Application
+
+### Development Mode
+
+To work with Hot Module Replacement (HMR):
+
+1. **Start the Web App (Terminal 1):**
 ```bash
-# Terminal 1: Ejecutar la app web
 cd ../web
 npm run dev
 
-# Terminal 2: Ejecutar Electron
-cd ../desktop
-npm run dev
 ```
 
-### Modo Producción
+
+2. **Launch Electron (Terminal 2):**
 ```bash
-# Primero construir la app web
+cd ../desktop
+npm run dev
+
+```
+
+
+
+*The app will automatically point to `http://localhost:3000*`.
+
+### Production Mode
+
+1. **Build the Web App:**
+```bash
 cd ../web
 npm run build
 
-# Luego construir la app de escritorio
+```
+
+
+2. **Launch the Desktop Environment:**
+```bash
 cd ../desktop
-npm run build
-```
-
-## 📦 Construir Ejecutables
-
-### Windows
-```bash
-npm run build:win
-```
-
-### macOS
-```bash
-npm run build:mac
-```
-
-### Linux
-```bash
-npm run build:linux
-```
-
-Los ejecutables se generarán en la carpeta `dist/`.
-
-## ⚙️ Configuración
-
-### Modo Desarrollo
-La aplicación carga `http://localhost:3000` automáticamente.
-
-### Modo Producción
-La aplicación carga los archivos estáticos de la build de Next.js.
-
-## 🔧 Personalización
-
-### Cambiar el Icono
-Reemplazar los archivos en `assets/`:
-- `icon.ico` - Windows
-- `icon.icns` - macOS
-- `icon.png` - Linux
-
-### Cambiar el Título
-Editar `productName` en `package.json` → `build`.
-
-## 📁 Estructura
+npm run start
 
 ```
+
+
+
+## 📦 Packaging & Distribution
+
+Generate production-ready executables located in the `dist/` folder.
+
+| Platform | Command |
+| --- | --- |
+| **Windows** | `npm run build:win` |
+| **macOS** | `npm run build:mac` |
+| **Linux** | `npm run build:linux` |
+
+## 📁 Project Structure
+
+```text
 desktop/
-├── main.js          # Proceso principal de Electron
-├── preload.js       # Script de preload seguro
-├── package.json     # Configuración y dependencias
-├── assets/          # Iconos de la aplicación
-└── dist/            # Ejecutables generados (después de build)
+├── main.js          # Electron main process (entry point)
+├── preload.js       # Secure bridge between Electron and Web
+├── package.json     # Scripts, dependencies, and build config
+├── assets/          # Application icons and static branding
+└── dist/            # Compiled binaries (generated after build)
+
 ```
 
-## 🐛 Solución de Problemas
+## ⚙️ Customization
 
-### La aplicación no carga
-- Verificar que la app web esté corriendo en desarrollo
-- Verificar que la build de Next.js exista en producción
+* **App Branding**: Update `productName` in `package.json` within the `build` configuration.
+* **Icons**: Replace the files in `assets/` using the following formats:
+* `icon.ico` (Windows)
+* `icon.icns` (macOS)
+* `icon.png` (Linux)
 
-### Errores de CORS
-- La app web debe permitir el origen de Electron
-- Verificar configuración de Next.js
 
-## 📝 Notas
 
-- La aplicación usa la misma base de código que la web
-- Todos los cambios en la web se reflejan automáticamente
-- El almacenamiento local funciona igual que en el navegador
+## 🐛 Troubleshooting
+
+* **White Screen / App not loading**:
+* Ensure the web server is active at the expected port (3000 by default).
+* Verify the Next.js build folder exists if running in production mode.
+
+
+* **CORS Policy Errors**:
+* The backend/web API must whitelist the Electron origin (or `file://` protocol if using static assets).
+
+
+
