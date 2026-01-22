@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  appointment-query-service:
+    image: dayanaheredia/appointment-query-service:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: appointment-query-service
+    ports:
+      - "8089:8089"
+    env_file:
+      - .env
+    networks:
+      - user-network
+
+networks:
+  user-network:
+    external: true

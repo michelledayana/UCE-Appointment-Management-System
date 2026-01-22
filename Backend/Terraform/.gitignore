@@ -1,0 +1,25 @@
+# --- Archivos de estado de Terraform ---
+# Estos contienen el estado actual de tu infraestructura y pueden tener datos sensibles.
+*.tfstate
+*.tfstate.*
+
+# --- Directorios de trabajo ---
+# Contienen los binarios de los proveedores y módulos descargados.
+.terraform/
+
+# --- Archivos de variables sensibles ---
+# NUNCA subas archivos que contengan contraseñas o llaves API.
+*.tfvars
+*.tfvars.json
+
+# --- Archivos de respaldo y temporales ---
+*.backup
+*.lock.hcl
+.terraform.lock.hcl
+
+# --- Archivos de registro (logs) ---
+*.log
+crash.log
+
+# --- Variables de entorno locales ---
+.env

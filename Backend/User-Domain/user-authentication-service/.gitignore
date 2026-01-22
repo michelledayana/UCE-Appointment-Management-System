@@ -1,0 +1,64 @@
+# ---------------------------
+# Python
+# ---------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Byte-compiled / optimized / DLL files
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# ---------------------------
+# Environment / Secrets
+# ---------------------------
+.env
+.env.*  # Si llegas a tener otros archivos de entorno
+*.key
+*.pem
+
+# ---------------------------
+# VS Code / IDE
+# ---------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ---------------------------
+# Terraform
+# ---------------------------
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# ---------------------------
+# Docker
+# ---------------------------
+docker-compose.override.yml
+*.dockerignore
+
+# ---------------------------
+# Other / Temporary
+# ---------------------------
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+
+__pycache__/
+*.pyc
+.env
