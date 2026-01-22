@@ -1,193 +1,128 @@
-# Sistema de Programación de Citas - Frontend
 
-Frontend escalable desarrollado con Next.js 14, React, TypeScript y TailwindCSS para el sistema de gestión de citas.
 
-## 🚀 Características
+# Appointment Scheduling System - Desktop Application
 
-- ✅ Autenticación JWT con roles (ADMIN, USUARIO)
-- ✅ Gestión de citas (crear, listar, cancelar)
-- ✅ Catálogo de servicios
-- ✅ Panel de administración
-- ✅ Gestión de perfiles de usuario
-- ✅ Diseño responsive (web/móvil)
-- ✅ Protección de rutas basada en roles
-- ✅ Manejo de errores y estados de carga
+A robust cross-platform desktop client built with **Electron**, designed to seamlessly wrap and deliver the **Next.js** web application experience with native system integration.
 
-## 📋 Requisitos Previos
+## 🚀 Key Features
 
-- Node.js 18+ 
-- npm o yarn
-- API Gateway corriendo en `http://localhost:8000`
+* **Native Wrapper**: Complete packaging of the Next.js web interface.
+* **Cross-Platform**: Full support for Windows, macOS, and Linux.
+* **System Integration**: Native OS menus and global keyboard shortcuts.
+* **Security**: Implementation of secure context via `preload.js`.
+* **Persistence**: Shared local storage and session handling consistent with the web browser.
 
-## 🛠️ Instalación
+## 📋 Prerequisites
 
-1. **Instalar dependencias:**
+Before you begin, ensure you have the following installed:
+
+* **Node.js**: Version 18.0 or higher.
+* **Package Manager**: `npm` or `yarn`.
+* **Web Instance**: The Next.js web application must be either running (development) or built (production).
+
+## 🛠️ Installation
+
+1. **Clone the repository and navigate to the desktop directory:**
+```bash
+cd Frontend/apps/desktop
+
+```
+
+
+2. **Install dependencies:**
 ```bash
 npm install
-# o
-yarn install
+
 ```
 
-2. **Configurar variables de entorno:**
+
+
+## ▶️ Running the Application
+
+### Development Mode
+
+To work with Hot Module Replacement (HMR):
+
+1. **Start the Web App (Terminal 1):**
 ```bash
-cp .env.local.example .env.local
-```
-
-Editar `.env.local`:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-3. **Ejecutar en desarrollo:**
-```bash
+cd ../web
 npm run dev
-# o
-yarn dev
-```
-
-4. **Abrir en el navegador:**
-```
-http://localhost:3000
-```
-
-## 📁 Estructura del Proyecto
 
 ```
-Frontend/
-├── app/                    # Páginas y rutas (App Router)
-│   ├── login/             # Página de login
-│   ├── register/          # Página de registro
-│   ├── catalog/           # Catálogo de servicios
-│   ├── appointments/       # Gestión de citas
-│   ├── profile/           # Perfil de usuario
-│   └── admin/             # Panel de administración
-├── components/            # Componentes reutilizables
-│   ├── common/            # Componentes UI comunes
-│   ├── layout/            # Componentes de layout
-│   ├── appointments/       # Componentes de citas
-│   └── services/          # Componentes de servicios
-├── contexts/              # Contextos de React
-│   └── AuthContext.tsx    # Contexto de autenticación
-├── lib/                   # Utilidades y configuraciones
-│   ├── api/               # Servicios API
-│   └── axios.ts           # Configuración de Axios
-├── types/                 # Tipos TypeScript
-└── middleware.ts          # Middleware de Next.js
-```
 
-## 🔐 Autenticación
 
-El sistema utiliza JWT (JSON Web Tokens) para la autenticación:
-
-- **Login:** `/login`
-- **Registro:** `/register`
-- **Logout:** Se maneja automáticamente desde el navbar
-
-Los tokens se almacenan en cookies y se incluyen automáticamente en las peticiones API.
-
-## 🛣️ Rutas
-
-### Públicas
-- `/login` - Inicio de sesión
-- `/register` - Registro de usuarios
-
-### Protegidas (requieren autenticación)
-- `/` - Dashboard principal
-- `/catalog` - Catálogo de servicios
-- `/appointments` - Mis citas
-- `/appointments/new` - Crear nueva cita
-- `/profile` - Mi perfil
-
-### Administración (requieren rol ADMIN)
-- `/admin` - Panel de administración
-- `/admin/services` - Gestión de servicios
-- `/admin/services/new` - Crear servicio
-- `/admin/appointments` - Todas las citas
-
-## 📡 Integración con API
-
-El frontend se comunica con el API Gateway en `http://localhost:8000`:
-
-### Endpoints principales:
-- `POST /auth/login` - Autenticación
-- `POST /users/register` - Registro
-- `GET /catalog/services` - Listar servicios
-- `POST /appointments` - Crear cita
-- `GET /appointments/my` - Mis citas
-- `GET /profiles/me` - Mi perfil
-- `PUT /profiles/me` - Actualizar perfil
-
-## 🎨 Componentes Principales
-
-### Componentes Comunes
-- `Button` - Botón reutilizable con variantes
-- `Input` - Input con validación
-- `Alert` - Alertas de éxito/error
-- `Loading` - Indicador de carga
-
-### Componentes de Layout
-- `Layout` - Layout principal con protección de rutas
-- `Navbar` - Barra de navegación
-
-### Componentes de Dominio
-- `AppointmentCard` - Tarjeta de cita
-- `ServiceCard` - Tarjeta de servicio
-
-## 🔒 Protección de Rutas
-
-El sistema implementa protección de rutas en dos niveles:
-
-1. **Middleware de Next.js** (`middleware.ts`): Protección a nivel de servidor
-2. **Componente Layout**: Protección a nivel de cliente con verificación de roles
-
-## 🧪 Testing
-
+2. **Launch Electron (Terminal 2):**
 ```bash
-# Ejecutar linter
-npm run lint
+cd ../desktop
+npm run dev
 
-# Build de producción
+```
+
+
+
+*The app will automatically point to `http://localhost:3000*`.
+
+### Production Mode
+
+1. **Build the Web App:**
+```bash
+cd ../web
 npm run build
 
-# Iniciar en producción
-npm start
 ```
 
-## 📝 Notas de Desarrollo
 
-- El proyecto usa **App Router** de Next.js 14
-- Los componentes son **Server Components** por defecto, usa `'use client'` cuando necesites interactividad
-- Los estilos usan **TailwindCSS** con clases personalizadas
-- La autenticación se maneja con **Context API** de React
-- Las peticiones API usan **Axios** con interceptores para tokens
+2. **Launch the Desktop Environment:**
+```bash
+cd ../desktop
+npm run start
 
-## 🐛 Solución de Problemas
+```
 
-### Error de CORS
-Asegúrate de que el API Gateway tenga configurado CORS para `http://localhost:3000`
 
-### Token expirado
-El sistema redirige automáticamente a `/login` cuando el token expira
 
-### Error 401
-Verifica que el token se esté enviando correctamente en los headers
+## 📦 Packaging & Distribution
 
-## 📚 Recursos
+Generate production-ready executables located in the `dist/` folder.
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [TailwindCSS](https://tailwindcss.com/docs)
-- [React Hook Form](https://react-hook-form.com/)
-- [Axios](https://axios-http.com/docs/intro)
+| Platform | Command |
+| --- | --- |
+| **Windows** | `npm run build:win` |
+| **macOS** | `npm run build:mac` |
+| **Linux** | `npm run build:linux` |
 
-## 👥 Contribución
+## 📁 Project Structure
 
-Este es un proyecto académico. Para contribuir:
+```text
+desktop/
+├── main.js          # Electron main process (entry point)
+├── preload.js       # Secure bridge between Electron and Web
+├── package.json     # Scripts, dependencies, and build config
+├── assets/          # Application icons and static branding
+└── dist/            # Compiled binaries (generated after build)
 
-1. Sigue los principios SOLID y Clean Code
-2. Mantén la estructura de carpetas
-3. Documenta componentes complejos
-4. Usa TypeScript para type safety
+```
 
----
+## ⚙️ Customization
 
-**Desarrollado para el proyecto académico de Ingeniería de Software**
+* **App Branding**: Update `productName` in `package.json` within the `build` configuration.
+* **Icons**: Replace the files in `assets/` using the following formats:
+* `icon.ico` (Windows)
+* `icon.icns` (macOS)
+* `icon.png` (Linux)
+
+
+
+## 🐛 Troubleshooting
+
+* **White Screen / App not loading**:
+* Ensure the web server is active at the expected port (3000 by default).
+* Verify the Next.js build folder exists if running in production mode.
+
+
+* **CORS Policy Errors**:
+* The backend/web API must whitelist the Electron origin (or `file://` protocol if using static assets).
+
+
+
+
