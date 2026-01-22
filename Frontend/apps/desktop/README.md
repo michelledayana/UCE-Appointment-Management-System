@@ -1,6 +1,4 @@
-This is a professional, high-quality version of your README in English. I have improved the structure, added a technical overview, and refined the instructions to make it look like a top-tier GitHub repository.
 
----
 
 # Appointment Scheduling System - Desktop Application
 
