@@ -1,1 +1,90 @@
+name: User Domain - User Registration Service CI/CD
+
+on:
+  push:
+    branches:
+      - QA
+      - main
+    paths:
+      - "Backend/User-Domain/user-registration-service/**"
+      - "Terraform/labs/user-domain/user-registration/**"
+
+env:
+  SERVICE_PATH: Backend/User-Domain/user-registration-service
+  TERRAFORM_PATH: Terraform/labs/user-domain/user-registration
+  DOCKER_IMAGE: dayanaheredia/user-registration-service:latest
+  AWS_REGION: ${{ secrets.AWS_REGION_USER }}
+
+jobs:
+  test-build-push:
+    name: Test, Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.SERVICE_PATH }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with Pytest
+        run: pytest -v
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICE_PATH }}
+          file: ${{ env.SERVICE_PATH }}/Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}
+
+  deploy-terraform:
+    name: Deploy Infrastructure with Terraform (Same Instance)
+    needs: test-build-push
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.TERRAFORM_PATH }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (User Domain Lab)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_USER }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_USER }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN_USER }}
+          aws-region: ${{ secrets.AWS_REGION_USER }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Apply (no destroy)
+        run: terraform apply -auto-approve
 
