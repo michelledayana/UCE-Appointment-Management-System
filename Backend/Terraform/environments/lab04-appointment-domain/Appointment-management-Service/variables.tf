@@ -13,22 +13,23 @@ variable "ami" {
 variable "key_name" {
   description = "Nombre de la key pair para SSH"
   type        = string
-  default     = "aq-key4" # Tu keypair existente
+  default     = "qa-key4"
 }
 
 variable "vpc_id" {
   description = "ID de la VPC donde se desplegarán los recursos"
   type        = string
-  default     = "vpc-04bcf1d30127c5d10"  # <-- ID de VPC de Appointment-Creation-Service
+  default     = "vpc-062dba627e9014a42"  # VPC pública del lab anterior
 }
 
 variable "subnet_id" {
   description = "ID de la Subnet dentro de la VPC"
   type        = string
-  default     = "subnet-0e0369897262e0289" # <-- ID de Subnet de Appointment-Creation-Service
+  default     = "subnet-02a50bf2703966d77" # Subnet pública del lab anterior
 }
 
 variable "my_ip" {
-  description = "IP pública autorizada para acceso al microservicio"
+  description = "IP pública autorizada para acceso SSH"
   type        = string
+  default     = "190.11.3.161/32" # Cambia a tu IP actual
 }

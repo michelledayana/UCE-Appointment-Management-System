@@ -19,7 +19,8 @@ jobs:
         working-directory: Backend/User-Domain/user-registration-service
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
