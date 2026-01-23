@@ -8,6 +8,7 @@ on:
     paths:
       - "Backend/User-Domain/user-registration-service/**"
       - "Terraform/labs/user-domain/user-registration/**"
+  workflow_dispatch:
 
 env:
   SERVICE_PATH: Backend/User-Domain/user-registration-service
