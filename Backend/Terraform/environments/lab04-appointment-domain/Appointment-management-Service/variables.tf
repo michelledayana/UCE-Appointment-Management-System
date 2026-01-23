@@ -19,13 +19,13 @@ variable "key_name" {
 variable "vpc_id" {
   description = "ID de la VPC donde se desplegarán los recursos"
   type        = string
-  default     = "vpc-062dba627e9014a42"  # VPC pública del lab anterior
+  default     = "vpc-062dba627e9014a42"  # VPC pública QA
 }
 
 variable "subnet_id" {
   description = "ID de la Subnet dentro de la VPC"
   type        = string
-  default     = "subnet-02a50bf2703966d77" # Subnet pública del lab anterior
+  default     = "subnet-02a50bf2703966d77" # Subnet pública QA
 }
 
 variable "my_ip" {

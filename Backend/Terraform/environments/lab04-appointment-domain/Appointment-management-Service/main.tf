@@ -38,7 +38,7 @@ resource "aws_security_group" "management_sg" {
 }
 
 # -------------------------------
-# EC2 Instance
+# EC2 Instance (solo una)
 # -------------------------------
 resource "aws_instance" "management_instance" {
   ami                         = var.ami
