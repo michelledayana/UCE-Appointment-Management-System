@@ -1,7 +1,8 @@
-# .github/workflows/api-gateway-rollback.yml
-name: Rollback API Gateway
-
 on:
+  push:
+    branches:
+      - QA
+      - main
   workflow_dispatch:
     inputs:
       environment:
