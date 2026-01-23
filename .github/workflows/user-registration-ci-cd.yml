@@ -1,3 +1,4 @@
+# debug-ci-force-run
 name: User Domain - User Registration Service CI/CD
 
 on:
