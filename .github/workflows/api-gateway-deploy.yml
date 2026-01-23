@@ -1,59 +1,70 @@
-# .github/workflows/api-gateway-rollback.yml
-name: Rollback API Gateway
+name: User Domain - User Registration Service CI/CD
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to rollback'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
-      previous_tag:
-        description: 'Previous image tag to rollback to'
-        required: true
-        type: string
+  push:
+    branches:
+      - QA
+      - main
+    paths:
+      - "Backend/User-Domain/user-registration-service/**"
+
+env:
+  SERVICE_PATH: Backend/User-Domain/user-registration-service
+  DOCKER_IMAGE: dayanaheredia/user-registration-service:latest
+  AWS_REGION: ${{ secrets.AWS_REGION_USER }}
 
 jobs:
-  rollback:
+  test-build-push-deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    
+
+    defaults:
+      run:
+        working-directory: ${{ env.SERVICE_PATH }}
+
     steps:
-      - name: Configure AWS credentials
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🧪 Run tests with Pytest
+        run: pytest -v
+
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🐳 Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICE_PATH }}
+          file: ${{ env.SERVICE_PATH }}/Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}
+
+      - name: ☁️ Configure AWS Credentials (User Domain)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_USER }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_USER }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN_USER }}
           aws-region: ${{ env.AWS_REGION }}
-      
-      - name: Get current ASG info
-        id: asg_info
+
+      - name: 🌍 Terraform Apply (same infrastructure)
         run: |
-          ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
-            --query "AutoScalingGroups[?contains(Tags[?Key=='Name'].Value, 'api-gateway-${{ github.event.inputs.environment }}')].AutoScalingGroupName" \
-            --output text)
-          
-          echo "asg_name=$ASG_NAME" >> $GITHUB_OUTPUT
-      
-      - name: Update launch template with previous image
-        run: |
-          # Get current launch template
-          LT_ID=$(aws ec2 describe-launch-templates \
-            --query "LaunchTemplates[?contains(LaunchTemplateName, 'api-gateway-${{ github.event.inputs.environment }}')].LaunchTemplateId" \
-            --output text)
-          
-          # Create new version with previous image
-          aws ec2 create-launch-template-version \
-            --launch-template-id $LT_ID \
-            --source-version '$Latest' \
-            --launch-template-data "{\"ImageId\":\"ami-xxxx\",\"UserData\":\"$(base64 -w0 <<< 'IMAGE_TAG=${{ github.event.inputs.previous_tag }}')\"}"
-      
-      - name: Start instance refresh
-        run: |
-          aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name ${{ steps.asg_info.outputs.asg_name }} \
-            --preferences '{"MinHealthyPercentage": 100, "InstanceWarmup": 300}'
+          terraform init
+          terraform apply -auto-approve
+        working-directory: infra/terraform/user-domain
