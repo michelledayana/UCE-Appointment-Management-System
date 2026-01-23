@@ -1,25 +1,30 @@
-# Security Group
+################################
+# SECURITY GROUP
+################################
 resource "aws_security_group" "profile_sg" {
   name        = "profile-sg"
   description = "Permitir SSH y puerto 8083"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc_id   # MISMA VPC que registration
 
+  # SSH
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.my_ip]
-    description = "SSH"
+    description = "SSH desde IP autorizada"
   }
 
+  # Microservicio User Profile
   ingress {
     from_port   = 8083
     to_port     = 8083
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Puerto microservicio"
+    description = "Puerto del microservicio"
   }
 
+  # Salida total
   egress {
     from_port   = 0
     to_port     = 0
@@ -32,11 +37,13 @@ resource "aws_security_group" "profile_sg" {
   }
 }
 
-# EC2 Instance
+################################
+# EC2 INSTANCE
+################################
 resource "aws_instance" "user_profile_instance" {
-  ami                         = "ami-0c02fb55956c7d316"
+  ami                         = "ami-0c02fb55956c7d316" # Amazon Linux 2
   instance_type               = var.instance_type
-  subnet_id                   = var.subnet_id
+  subnet_id                   = var.subnet_id          # MISMA subnet que registration
   vpc_security_group_ids      = [aws_security_group.profile_sg.id]
   associate_public_ip_address = true
   key_name                    = var.key_name
