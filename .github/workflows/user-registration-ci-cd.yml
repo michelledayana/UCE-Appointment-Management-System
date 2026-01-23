@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - QA
-      - main
     paths:
       - Backend/User-Domain/user-registration-service/**
       - Terraform/labs/user-domain/user-registration/**
