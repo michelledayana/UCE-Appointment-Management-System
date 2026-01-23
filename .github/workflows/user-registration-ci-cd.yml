@@ -1,37 +1,441 @@
-# debug-ci-force-run
-name: User Domain - User Registration Service CI/CD
+# .github/workflows/user-registration-deploy.yml
+name: 🚀 User Registration Service - CI/CD Pipeline
 
 on:
+  # Se activa cuando hay cambios en:
   push:
-    branches:
-      - QA
+    branches: [QA, main]
     paths:
-      - Backend/User-Domain/user-registration-service/**
-      - Terraform/labs/user-domain/user-registration/**
+      - 'Backend/User-Domain/user-registration-service/**'
+      - '.github/workflows/user-registration-deploy.yml'
+  
+  # Para ejecución manual desde GitHub UI
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      run_tests:
+        description: 'Run tests before deploy'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  SERVICE_NAME: user-registration-service
+  SERVICE_PATH: Backend/User-Domain/user-registration-service
+  AWS_REGION: us-east-1
+  DOCKER_IMAGE: "michelledayana/user-registration-service"
+  ECR_REPOSITORY: "user-registration-service"  # Para ECR si usas AWS
+
+# Evita ejecuciones duplicadas
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
+  # JOB 1: TESTS AUTOMÁTICOS (siempre se ejecuta)
+  run-tests:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest-4-core
+    
     defaults:
       run:
-        working-directory: Backend/User-Domain/user-registration-service
-
+        working-directory: ${{ env.SERVICE_PATH }}
+    
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      
+      - name: 🐍 Setup Python 3.10
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
-
-      - name: Install dependencies
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: ${{ env.SERVICE_PATH }}/requirements.txt
+      
+      - name: 📦 Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
-
-      - name: Run tests
-        run: pytest -v
+          pip install pytest pytest-cov black isort
+      
+      - name: 🧹 Run linters
+        run: |
+          black --check app/
+          isort --check-only app/
+      
+      - name: 🧪 Run unit tests
+        env:
+          DATABASE_URL:sqlite:///:memory:
+          JWT_SECRET: test-secret-key-$(date +%s)
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+          ENVIRONMENT: test
+        run: |
+          python -m pytest tests/ \
+            -v \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=html \
+            --tb=short \
+            --disable-warnings
+      
+      - name: 📊 Upload test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ env.SERVICE_PATH }}/coverage.xml
+          flags: user-registration-service
+  
+  # JOB 2: BUILD DOCKER IMAGE (solo si tests pasan)
+  build-docker:
+    name: 🐳 Build & Tag Docker Image
+    needs: run-tests
+    if: success() && (github.event_name == 'push' || github.event.inputs.run_tests == 'true')
+    runs-on: ubuntu-latest
+    
+    outputs:
+      image_tag: ${{ steps.tag.outputs.tag }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔍 Get commit info for tagging
+        id: tag
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-8)
+          DATE_TAG=$(date +%Y%m%d-%H%M%S)
+          
+          # Tag según branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            TAG="prod-$DATE_TAG-$SHORT_SHA"
+          elif [[ "${{ github.ref }}" == "refs/heads/qa" ]]; then
+            TAG="staging-$DATE_TAG-$SHORT_SHA"
+          else
+            TAG="dev-$DATE_TAG-$SHORT_SHA"
+          fi
+          
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "📦 Docker tag: $TAG"
+      
+      - name: 🐋 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: 🐳 Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICE_PATH }}
+          file: ${{ env.SERVICE_PATH }}/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.SERVICE_NAME }}:${{ steps.tag.outputs.tag }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.SERVICE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+          platforms: linux/amd64
+      
+      - name: 📝 Save image info
+        run: |
+          echo "✅ Docker image built and pushed"
+          echo "Image: ${{ secrets.DOCKER_USERNAME }}/${{ env.SERVICE_NAME }}:${{ steps.tag.outputs.tag }}"
+          echo "📋 Image tag saved for deployment"
+  
+  # JOB 3: DEPLOY TO EXISTING INSTANCES (no crea nuevas)
+  deploy-to-instances:
+    name: 🚀 Deploy to Existing AWS Instances
+    needs: build-docker
+    if: success()
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_USER }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_USER }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN_USER }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🔍 Find existing instances
+        id: find-instances
+        run: |
+          echo "🔍 Looking for existing instances..."
+          
+          # Buscar instancias por tag
+          INSTANCE_IDS=$(aws ec2 describe-instances \
+            --filters "Name=tag:Service,Values=${{ env.SERVICE_NAME }}" \
+                      "Name=tag:Environment,Values=${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}" \
+                      "Name=instance-state-name,Values=running" \
+            --query "Reservations[].Instances[].InstanceId" \
+            --output text)
+          
+          if [ -z "$INSTANCE_IDS" ]; then
+            echo "❌ No instances found with tags"
+            echo "⚠️ Trying to find by Auto Scaling Group..."
+            
+            # Buscar ASG
+            ASG_NAME=$(aws autoscaling describe-auto-scaling-groups \
+              --query "AutoScalingGroups[?contains(Tags[?Key=='Service'].Value, '${{ env.SERVICE_NAME }}')].AutoScalingGroupName" \
+              --output text)
+            
+            if [ -n "$ASG_NAME" ]; then
+              echo "📋 Found ASG: $ASG_NAME"
+              INSTANCE_IDS=$(aws autoscaling describe-auto-scaling-groups \
+                --auto-scaling-group-names "$ASG_NAME" \
+                --query "AutoScalingGroups[].Instances[].InstanceId" \
+                --output text)
+            fi
+          fi
+          
+          if [ -z "$INSTANCE_IDS" ]; then
+            echo "❌❌❌ NO HAY INSTANCIAS EXISTENTES"
+            echo "⚠️ No se puede hacer deploy. Primero ejecuta Terraform para crear la infraestructura."
+            echo "instance_ids=" >> $GITHUB_OUTPUT
+            echo "has_instances=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ Found instances: $INSTANCE_IDS"
+            echo "instance_ids=$INSTANCE_IDS" >> $GITHUB_OUTPUT
+            echo "has_instances=true" >> $GITHUB_OUTPUT
+            
+            # También obtener IPs para SSH
+            INSTANCE_IPS=""
+            for ID in $INSTANCE_IDS; do
+              IP=$(aws ec2 describe-instances \
+                --instance-ids "$ID" \
+                --query "Reservations[0].Instances[0].PrivateIpAddress" \
+                --output text)
+              INSTANCE_IPS="$INSTANCE_IPS $IP"
+            done
+            echo "instance_ips=$INSTANCE_IPS" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 🚀 Deploy to each instance
+        if: steps.find-instances.outputs.has_instances == 'true'
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          BASTION_HOST: ${{ secrets.BASTION_HOST }}
+          BASTION_USER: ${{ secrets.BASTION_USER }}
+          DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/${{ env.SERVICE_NAME }}:${{ needs.build-docker.outputs.image_tag }}
+        run: |
+          echo "🚀 Starting deployment to existing instances..."
+          
+          # Crear clave SSH temporal
+          echo "$DEPLOY_KEY" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          
+          # Script de deploy
+          DEPLOY_SCRIPT=$(cat << 'SCRIPT_EOF'
+          #!/bin/bash
+          set -e
+          
+          SERVICE_NAME="$1"
+          DOCKER_IMAGE="$2"
+          ENVIRONMENT="$3"
+          
+          echo "=== Deploying $SERVICE_NAME ==="
+          echo "Image: $DOCKER_IMAGE"
+          echo "Environment: $ENVIRONMENT"
+          
+          # 1. Login to Docker Hub
+          echo "🔐 Logging into Docker Hub..."
+          docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+          
+          # 2. Pull new image
+          echo "⬇️ Pulling new image..."
+          docker pull "$DOCKER_IMAGE"
+          
+          # 3. Stop and remove old container
+          echo "🛑 Stopping old container..."
+          docker stop "$SERVICE_NAME" 2>/dev/null || true
+          docker rm "$SERVICE_NAME" 2>/dev/null || true
+          
+          # 4. Run new container
+          echo "🚀 Starting new container..."
+          docker run -d \
+            --name "$SERVICE_NAME" \
+            --restart unless-stopped \
+            -p 8000:8000 \
+            -e ENVIRONMENT="$ENVIRONMENT" \
+            -e AWS_REGION="us-east-1" \
+            -v "/opt/$SERVICE_NAME/logs:/app/logs" \
+            -v "/opt/$SERVICE_NAME/config:/app/config" \
+            "$DOCKER_IMAGE"
+          
+          # 5. Wait for health check
+          echo "⏳ Waiting for service to be healthy..."
+          sleep 10
+          
+          for i in {1..30}; do
+            if curl -s -f http://localhost:8000/health > /dev/null; then
+              echo "✅ Service is healthy!"
+              
+              # 6. Cleanup old images
+              echo "🧹 Cleaning up old images..."
+              docker image prune -af
+              
+              echo "🎉 Deployment completed successfully!"
+              exit 0
+            fi
+            echo "Attempt $i/30: Service not ready yet..."
+            sleep 5
+          done
+          
+          echo "❌ Service health check failed!"
+          
+          # Rollback: restart old image if available
+          OLD_IMAGE=$(docker images --filter "reference=*$SERVICE_NAME*" --format "{{.Repository}}:{{.Tag}}" | grep -v "$DOCKER_IMAGE" | head -1)
+          if [ -n "$OLD_IMAGE" ]; then
+            echo "🔄 Rolling back to: $OLD_IMAGE"
+            docker stop "$SERVICE_NAME" 2>/dev/null || true
+            docker rm "$SERVICE_NAME" 2>/dev/null || true
+            docker run -d \
+              --name "$SERVICE_NAME" \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              -e ENVIRONMENT="$ENVIRONMENT" \
+              "$OLD_IMAGE"
+          fi
+          
+          exit 1
+          SCRIPT_EOF
+          )
+          
+          IFS=' ' read -ra INSTANCE_ARRAY <<< "${{ steps.find-instances.outputs.instance_ids }}"
+          IFS=' ' read -ra IP_ARRAY <<< "${{ steps.find-instances.outputs.instance_ips }}"
+          
+          for index in "${!INSTANCE_ARRAY[@]}"; do
+            INSTANCE_ID="${INSTANCE_ARRAY[$index]}"
+            INSTANCE_IP="${IP_ARRAY[$index]}"
+            
+            echo ""
+            echo "🔧 Deploying to instance: $INSTANCE_ID ($INSTANCE_IP)"
+            
+            # Ejecutar deploy via SSH (con bastion si es necesario)
+            if [ -n "$BASTION_HOST" ]; then
+              # Con bastion host
+              ssh -o StrictHostKeyChecking=no \
+                -i /tmp/deploy_key \
+                -J "$BASTION_USER@$BASTION_HOST" \
+                "ec2-user@$INSTANCE_IP" \
+                "bash -s" <<< "$DEPLOY_SCRIPT" \
+                "${{ env.SERVICE_NAME }}" \
+                "$DOCKER_IMAGE" \
+                "${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+            else
+              # Directo a la instancia
+              ssh -o StrictHostKeyChecking=no \
+                -i /tmp/deploy_key \
+                "ec2-user@$INSTANCE_IP" \
+                "bash -s" <<< "$DEPLOY_SCRIPT" \
+                "${{ env.SERVICE_NAME }}" \
+                "$DOCKER_IMAGE" \
+                "${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}"
+            fi
+            
+            echo "✅ Instance $INSTANCE_ID deployed successfully"
+          done
+          
+          # Limpiar clave SSH
+          rm -f /tmp/deploy_key
+      
+      - name: 📡 Verify deployment
+        if: steps.find-instances.outputs.has_instances == 'true'
+        run: |
+          echo "📡 Verifying deployment..."
+          
+          # Esperar y verificar health checks
+          ELB_DNS=$(aws elbv2 describe-load-balancers \
+            --query "LoadBalancers[?contains(LoadBalancerName, '${{ env.SERVICE_NAME }}')].DNSName" \
+            --output text 2>/dev/null || echo "")
+          
+          if [ -n "$ELB_DNS" ]; then
+            echo "🔍 Checking Load Balancer: $ELB_DNS"
+            
+            for i in {1..30}; do
+              RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "http://$ELB_DNS/health" || echo "000")
+              
+              if [ "$RESPONSE" = "200" ]; then
+                echo "✅ Load Balancer health check passed!"
+                break
+              fi
+              
+              if [ $i -eq 30 ]; then
+                echo "⚠️ Load Balancer health check timeout"
+              else
+                echo "Attempt $i/30: Response $RESPONSE"
+                sleep 5
+              fi
+            done
+          else
+            echo "ℹ️ No Load Balancer found for ${{ env.SERVICE_NAME }}"
+          fi
+  
+  # JOB 4: NOTIFICACIONES Y RESUMEN
+  notify:
+    name: 📢 Deployment Summary
+    needs: [run-tests, build-docker, deploy-to-instances]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📊 Generate deployment report
+        env:
+          DEPLOYMENT_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          DOCKER_IMAGE_FULL: ${{ secrets.DOCKER_USERNAME }}/${{ env.SERVICE_NAME }}:${{ needs.build-docker.outputs.image_tag || 'N/A' }}
+        run: |
+          echo "# 🚀 DEPLOYMENT REPORT - ${{ env.SERVICE_NAME }}" > report.md
+          echo "" >> report.md
+          echo "## 📋 Summary" >> report.md
+          echo "- **Service:** ${{ env.SERVICE_NAME }}" >> report.md
+          echo "- **Branch:** ${{ github.ref }}" >> report.md
+          echo "- **Commit:** ${{ github.sha }}" >> report.md
+          echo "- **Trigger:** ${{ github.event_name }}" >> report.md
+          echo "- **Environment:** $DEPLOYMENT_ENV" >> report.md
+          echo "- **Docker Image:** $DOCKER_IMAGE_FULL" >> report.md
+          echo "" >> report.md
+          
+          echo "## 📊 Job Status" >> report.md
+          echo "| Job | Status | Details |" >> report.md
+          echo "|-----|--------|---------|" >> report.md
+          echo "| 🧪 Tests | ${{ needs.run-tests.result }} | Unit tests and linting |" >> report.md
+          echo "| 🐳 Docker Build | ${{ needs.build-docker.result || 'skipped' }} | Image: $DOCKER_IMAGE_FULL |" >> report.md
+          echo "| 🚀 Deployment | ${{ needs.deploy-to-instances.result || 'skipped' }} | In-place update |" >> report.md
+          echo "" >> report.md
+          
+          echo "## ⏰ Timeline" >> report.md
+          echo "- **Started:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> report.md
+          echo "- **Duration:** ${{ job.status == 'completed' && 'Completed' || 'In progress' }}" >> report.md
+          echo "" >> report.md
+          
+          echo "## 🔗 Links" >> report.md
+          echo "- [GitHub Commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})" >> report.md
+          echo "- [Docker Image](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/${{ env.SERVICE_NAME }}/tags)" >> report.md
+          echo "" >> report.md
+          
+          cat report.md
+      
+      - name: 📨 Send notification (optional)
+        if: always()
+        run: |
+          echo "📨 Notification would be sent here"
+          # Aquí puedes agregar notificación a Slack, Email, etc.
+          # Usar secrets: SLACK_WEBHOOK, EMAIL_CONFIG, etc.
